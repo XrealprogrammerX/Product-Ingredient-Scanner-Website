@@ -1,0 +1,49 @@
+Build the backend logic for processing an uploaded ingredient label photo, using a cache-first pattern: check the database before calling any AI model, and always save AI results back to the database afterward.
+
+Step 1 — Product lookup:
+When a user uploads a label photo (or searches by name/barcode), first check the Supabase database for an existing matching product record. Match by barcode if scanned, or by a normalized/fuzzy match on product name if typed or OCR'd from the image. If a matching record already exists and its scan data is present, skip the AI model entirely and return the cached structured result immediately.
+
+Step 2 — AI model call (only if no cached match exists):
+If no existing record is found, send the uploaded image to an AI vision model with a system prompt that requires it to return ONLY a JSON object in this exact schema, with no other text:
+
+json{
+  "product_name": "string or null",
+  "scan_status": "success | partial | failed",
+  "ingredients": [
+    {
+      "name": "string as it appears on the label",
+      "normalized_name": "string, canonical/decoded name (e.g. E621 -> monosodium glutamate)",
+      "category": "allergen_match | avoid_match | allow_match | general_caution | neutral",
+      "severity": "high | medium | low | none",
+      "display_color": "red | green | amber | neutral",
+      "plain_explanation": "a short, factual, non-judgmental description of what this ingredient is and its function — this field is required for every ingredient regardless of category",
+      "reason": "a short explanation of why this was flagged, present ONLY if category is not neutral"
+    }
+  ],
+  "summary": {
+    "overall_flag": "allergen_warning | avoid_warning | safe | insufficient_data",
+    "headline": "string",
+    "matched_user_preferences": ["array of strings"]
+  },
+  "disclaimer": "Based on the ingredient data on file — always confirm against the physical product label."
+}
+
+Include these rules directly in the model's system prompt:
+
+
+Never assign category: general_caution to anything outside this fixed list: artificial flavoring, artificial coloring, MSG and related flavor-enhancer E-numbers (E621, E627, E631, E635), high-fructose corn syrup, added sugar. Anything not on this list defaults to neutral even if it sounds unfamiliar.
+plain_explanation must always be factual and neutral in tone — describe what the ingredient is and what it does, never imply danger or harm unless it is genuinely categorized as allergen_match or avoid_match against the user's own stated profile.
+reason must only be populated for allergen_match, avoid_match, allow_match, or general_caution categories — never for neutral.
+Decode E-codes and scientific/chemical names into their common name as part of normalized_name and plain_explanation.
+If the label image is unreadable or ingredients are cut off, set scan_status to partial or failed and summary.overall_flag to insufficient_data — never guess at missing ingredients.
+Match ingredients against the specific user's stored profile (their allergies, avoid-list, and allow-list) which will be provided alongside the image in the request.
+
+
+Step 3 — Validate before saving:
+Before saving or displaying the model's response, run a validation check: confirm every ingredient object has all required fields, confirm every non-neutral ingredient has a non-empty reason, and confirm general_caution was only used for the approved list. If validation fails, retry the model call once; if it fails again, fall back to scan_status: "failed" rather than showing malformed data.
+
+Step 4 — Save to database:
+Once validated, save the structured result to a products table in Supabase (keyed by barcode or normalized product name), separate from any user-specific matching — store the raw ingredient list and glossary explanations as shared/reusable data, and compute the personalized red/green/amber matches against each user's profile at read time rather than baking one user's preferences into the stored record. This way the same cached product data can serve different personalized results to different users without needing a fresh AI call per user.
+
+General requirement:
+Log which results came from cache versus a live model call (e.g., a source: "cache" | "ai_model" field), so this can be inspected later — useful for debugging and for demonstrating how the caching system works.

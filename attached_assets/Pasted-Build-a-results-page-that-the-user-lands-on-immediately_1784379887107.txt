@@ -1,0 +1,36 @@
+Build a results page that the user lands on immediately after uploading a photo of a product's ingredient label. This page always renders from a single structured JSON object returned by the scan (see the fixed format above) — build the UI to read directly from that structure.
+
+Page layout, top to bottom:
+
+
+Uploaded image, top of page: Show the user's uploaded ingredient label photo prominently at the top, so they can see what was scanned. Below or beside it, show product_name if known, or "Product name not detected" if null.
+Scan status banner (only if not fully successful): If scan_status is partial, show a calm amber/neutral banner: "We could only read part of this label — results may be incomplete." If failed, show: "We couldn't read this label. Try a clearer photo." — and in the failed case, don't render an ingredient list at all, just a retry action.
+Summary headline: Render summary.headline prominently at the top of the results area, styled according to summary.overall_flag: red styling with a warning icon for allergen_warning, red styling with an X icon for avoid_warning, green styling with a check icon for safe, and neutral/grey styling with an info icon for insufficient_data. Never rely on color alone — always pair with the icon and the text.
+Ingredient list: Render every item in the ingredients array as a row or card. For each ingredient:
+
+If display_color is red: highlight the ingredient name in red, show the reason text directly beneath it in plain language.
+If display_color is green: highlight the ingredient name in green, show the reason text beneath it.
+If display_color is neutral: render the ingredient name in the site's normal text color, no highlight.
+For every ingredient where glossary.known is true, show its definition in smaller supporting text beneath the name (this applies regardless of color — a neutral ingredient can still have a helpful glossary definition, e.g., "Citric acid — a natural preservative and flavoring derived from citrus fruit"). If glossary.known is false, either omit the definition line or show "No additional information available for this ingredient" — never fabricate a definition client-side.
+Sort the list so red items appear first, then green, then neutral, so the most important information is immediately visible without scrolling through neutral ingredients first.
+
+
+
+Matched preferences recap: Below the ingredient list, show a small section listing summary.matched_user_preferences — e.g., "We checked this against: your peanut allergy, your vegan preference, your dislike of fragrance" — so the user can see exactly what was checked against their profile, reinforcing transparency.
+Disclaimer: Always show the disclaimer field near the summary headline, styled as a real visible element, not footer fine print.
+Actions: Include a "Scan another product" button returning to the upload flow, and a "Report an issue with this result" link/button (doesn't need real functionality for the demo, but should be present — it signals the product takes accuracy seriously).
+
+
+Design constraints:
+
+
+Keep the same calm, trustworthy visual language as the rest of the site — red and green should be used exactly as defined above and nowhere else on this page.
+Fully responsive — the uploaded image and ingredient list should stack sensibly on mobile.
+Loading state: while the scan is processing, show a clear loading indicator (not a blank page) with brief messaging like "Reading your label…".
+
+
+Technical notes:
+
+
+Treat the JSON structure above as the single source of truth the page renders from — build the frontend to be driven entirely by that object so backend logic changes don't require frontend rewrites.
+Use a fixed reference/glossary table (not free-form AI generation) for ingredient definitions, so every definition shown has been vetted ahead of time rather than generated live.

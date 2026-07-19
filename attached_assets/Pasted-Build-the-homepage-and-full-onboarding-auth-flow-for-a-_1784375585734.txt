@@ -1,0 +1,67 @@
+Build the homepage and full onboarding/auth flow for a product transparency web app. The app lets users search or scan any product (food, cosmetics, household) and see a personalized report showing allergens, vegan/organic/halal status, and flagged chemicals like fragrance — matched against the individual user's own saved profile (their allergies and preferences).
+
+Overall design direction:
+Clean, trustworthy, modern health-tech aesthetic — closer to a calm wellness brand than a clinical warning label. Confident whitespace, soft rounded cards, a legible sans-serif type system with clear hierarchy. Avoid anything that looks alarmist or gimmicky by default — the only place bold red should appear anywhere on the homepage is inside the personalized-warning demonstration section. Everywhere else, keep the palette calm (soft greens, off-whites, warm neutrals, one confident accent color) so that when red does appear, it actually means something.
+
+Layout principle for the whole homepage:
+Build each section as a side-by-side flex/grid layout (content in columns, not stacked full-width rows) wherever the section has two natural halves — e.g., text next to visual, steps laid out as columns rather than stacked vertically. On smaller/mobile viewports, gracefully collapse each grid down to a stacked single column so nothing overlaps or gets cut off.
+
+Section 1 — Hero
+
+Two-column layout. Right column: the headline (something like "Know what's really in it" — generate a few options), a one-sentence subheadline explaining the idea, and a prominent search bar as the primary call to action with placeholder text like "Search a product…". Left column: an embedded video (I'll provide the video) representing the company's idea/mission. Apply a background treatment where the area behind the right column (text/search side) is sharp and clean, while the background behind the left column (video side) is softly blurred behind the video itself, so the two halves feel visually connected but distinct — the blur should be a background effect behind the video, not applied to the video content itself. As the user scrolls past the hero, shrink the search bar smoothly into a persistent mini search bar that sticks to the top of the viewport for the rest of the page.
+
+Section 2 — "How it works"
+
+Three-column layout, one column per step: 1) Search or scan a product, 2) We check the ingredient list, 3) Get a report matched to your profile. As the user scrolls this section into view, animate the three columns in with a staggered fade/slide-in (left to right), each with a simple icon or illustration animating in alongside its text.
+
+Section 3 — Interactive personalization demo (centerpiece)
+
+Two-column layout: one column holds the interactive mock product card, the other holds a toggle/button group letting the visitor switch between two example profiles (e.g., "No allergies" vs. "Peanut allergy"). When the visitor switches profiles, animate the product card updating live: for the allergy profile, a bold red warning banner animates into the top of the card naming the specific triggering ingredient with a short plain-language reason underneath; for the no-allergy profile, the same card shows calm, neutral tags instead (vegan, organic, contains fragrance) with no red anywhere. Make the transition between states feel smooth and obviously different, not just a text swap. This is the most important section on the page — build it as a genuinely interactive widget.
+
+Section 4 — Trust/transparency section
+
+Two-column layout: one side explains that every flag is traceable back to the actual ingredient list, no invented claims; the other side shows a small animated example of an ingredient line being scanned with a tag "lighting up" from it. Include a short, honestly-worded disclaimer as a real visible design element (not footer fine print): results are based on the ingredient data on file and should be confirmed against the physical product label.
+
+Section 5 — Coverage/tags overview
+
+A row of columns (grid, wrapping responsively) covering the tag types the app checks: Allergens, Vegan, Organic, Halal, Fragrance/Chemicals — one short description each. Animate each tile in as it scrolls into view.
+
+Section 6 — Final call to action
+
+Closing section, search bar or "Get started" button, one short restatement of the core value.
+
+Interaction and animation requirements:
+
+
+Scroll-triggered animations throughout (elements animate in as they enter the viewport, not on page load).
+Section 3's personalization demo must be fully interactive and central — this is the feature that should be memorable.
+Animations should be purposeful (evidence assembling, a warning appearing, a tag lighting up), not decorative motion for its own sake.
+Fully responsive, with touch/tap interactions on mobile, not hover-dependent.
+Reserve bold red exclusively for real personalized allergy warnings — never used decoratively elsewhere on the page.
+Do NOT include any rotating/tilting product image effect anywhere on this page.
+
+
+
+PART 2 — Onboarding and authentication flow
+
+Build this as the flow a brand-new user goes through before ever reaching the main app, in this exact order:
+
+
+Name/username step: Ask for a display name or username using a simple text field — this is fine as free text since it's not a preference field.
+Dietary preference step: Present selectable option chips/buttons only — never a free-text field here. Options: Vegan, Vegetarian, Halal, No preference (allow multi-select where sensible, e.g., Vegan + Halal together).
+Allergies step: Multi-select chips for the standard major allergens (milk, eggs, peanuts, tree nuts, shellfish, soy, wheat, sesame, fish), plus an "add another" option that still adds as a short tag/chip, not a paragraph.
+Ingredients/keywords to avoid step: Multi-select chips for common flags (sulfates, parabens, artificial flavoring, fragrance/parfum), plus an "add another" chip option for anything else.
+Ingredients/keywords to allow step (things they specifically want, e.g., "organic," "cruelty-free"): Same chip-based multi-select pattern.
+Hold all of the above in temporary local/session state — do not require an account yet.
+Account creation step: Now ask for email and password to actually create the account, and at this point save the account along with all the preference data collected in steps 1–5 to the user's profile in the database.
+OTP verification step: Immediately after account creation, send a one-time-passcode to the user's email and show a verification screen where they enter the code to confirm their email before proceeding. Handle invalid/expired codes gracefully with a clear retry/resend option.
+Login step: After successful verification, take the user to a login screen where they sign in with the email and password they just created (do not auto-log them in from verification — require the explicit login step).
+Return to homepage, now signed in: After login, return the user to the homepage, now in a signed-in state, where they can upload a photo of a product's ingredient label (or search/scan as described elsewhere) and receive a result personalized against the profile they just built.
+
+
+General requirements:
+
+
+Every step in the onboarding flow uses selectable options (chips, toggles, buttons) rather than free text, except the initial name/username field.
+Show clear progress through the onboarding steps (e.g., a step indicator) so the user knows how many steps remain.
+The whole flow should work smoothly on mobile.
